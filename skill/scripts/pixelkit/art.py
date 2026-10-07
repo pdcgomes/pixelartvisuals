@@ -6,7 +6,7 @@ import random
 import textwrap
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from .geometry import BAYER4, PATTERNS, Rect
 
@@ -167,6 +167,61 @@ class Art:
                     if n not in faces:
                         self.px(n[0], n[1], outline)
         return geo
+
+    def circle(self, cx: float, cy: float, r: float, color, *, outline=None) -> Rect:
+        """Filled disc of every pixel whose centre lies within r of (cx, cy); `outline` rings its
+        edge pixels. Use a .5 centre for odd diameters. Returns the bounding Rect."""
+        x0, y0, x1, y1 = int(cx - r) - 1, int(cy - r) - 1, int(cx + r) + 2, int(cy + r) + 2
+
+        def inside(px, py):
+            return (px + 0.5 - cx) ** 2 + (py + 0.5 - cy) ** 2 < r * r
+
+        for py in range(y0, y1):
+            for px in range(x0, x1):
+                if inside(px, py):
+                    edge = outline is not None and not all(
+                        inside(px + dx, py + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+                    self.px(px, py, outline if edge else color)
+        return Rect(x0, y0, x1 - x0, y1 - y0)
+
+    def sphere(self, cx: float, cy: float, r: float, color, *, light=(-0.55, -0.6), shades=None) -> Rect:
+        """A lit ball: each pixel takes a shade from its surface's angle to `light` (x, y towards
+        the viewer's left/top), with ordered dithering between shades (dark to light by default)."""
+        shades = [self.rgb(s) for s in (shades or [self.dark(color), color, self.light(color)])]
+        lx, ly = light
+        lz = max(0.0, 1 - lx * lx - ly * ly) ** 0.5
+        n = len(shades) - 1
+        for py in range(int(cy - r) - 1, int(cy + r) + 2):
+            for px in range(int(cx - r) - 1, int(cx + r) + 2):
+                dx, dy = (px + 0.5 - cx) / r, (py + 0.5 - cy) / r
+                if dx * dx + dy * dy >= 1:
+                    continue
+                dz = (1 - dx * dx - dy * dy) ** 0.5
+                level = max(0.0, min(1.0, (dx * lx + dy * ly + dz * lz) * 0.9 + 0.1)) * n
+                k = min(int(level), n - 1) if n else 0
+                hit = n and level - k > (BAYER4[py % 4][px % 4] + 0.5) / 16
+                self.px(px, py, shades[k + 1] if hit else shades[k])
+        return Rect(int(cx - r), int(cy - r), int(2 * r) + 1, int(2 * r) + 1)
+
+    def polygon(self, points, *, fill=None, outline=None, pattern=None) -> None:
+        """Polygon through integer points. `pattern` (a PATTERNS name) inks only that share of the
+        fill, for a see-through area."""
+        pts = [tuple(p) for p in points]
+        if fill is not None:
+            if pattern is None:
+                self._draw.polygon(pts, fill=self.rgb(fill))
+            else:
+                mask = Image.new("1", (self.w, self.h), 0)
+                ImageDraw.Draw(mask).polygon(pts, fill=1)
+                test, rgb = PATTERNS[pattern], self.rgb(fill)
+                box = mask.getbbox()
+                if box:
+                    for py in range(box[1], box[3]):
+                        for px in range(box[0], box[2]):
+                            if mask.getpixel((px, py)) and test(px, py):
+                                self.img.putpixel((px, py), rgb)
+        if outline is not None:
+            self.polyline(pts + pts[:1], outline)
 
     def iso_floor(self, x: int, y: int, w: int, d: int, *, step: int = 4, color="line", dots: bool = False) -> Iso:
         """Isometric floor grid in the same coordinates as iso_box (h=0), every `step` units.

@@ -30,6 +30,36 @@ The repo holds two things:
 | `waffle.py`: parts of a whole | `cover.py`: a post cover and social card |
 | ![Diagram](skill/examples/diagram.png) | ![Specimen](skill/examples/specimen.png) |
 | `diagram.py`: nodes, a bus and connectors | `specimen.py`: every glyph, colour, icon and part |
+
+## Showcase
+
+What else the kit can draw, when nobody's asking for a bar chart. Each piece is one script in
+[`examples/`](examples/); run any of them with `PYTHONPATH=skill/scripts python3 examples/<name>.py`.
+
+[![The sysop's bedroom, 1992](examples/bedroom.gif)](examples/bedroom.py)
+
+`bedroom.py`: the sysop's bedroom, 1992. An isometric room at night with a beige PC, a 2400 bps
+modem, a 16-bit console with a street fight on the TV, a lava lamp and a sleeping cat, while the
+CRT dials a BBS and starts a download that will take four and a half minutes.
+
+| | |
+| --- | --- |
+| ![Pixeltrakker 8](examples/tracker.gif) | ![Fruit Music](examples/fruitmusic.gif) |
+| `tracker.py`: a music tracker, half Amiga, half M8, playing a 32-row pattern | `fruitmusic.py`: a Winamp-style player for the streaming era |
+| ![Pixel Loops Studio](examples/daw.gif) | ![$PIXL](examples/finance.gif) |
+| `daw.py`: a pattern-based DAW with a channel rack, piano roll and mixer | `finance.py`: a trading terminal with candles, moving averages and a ticker tape |
+| ![Hacker UI](examples/hacker.gif) | ![Character sheet](examples/rpg.gif) |
+| `hacker.py`: a film's hacking scene, from the terminal to the trace to the glitch | `rpg.py`: a developer's character sheet, with stats, inventory and quests |
+| ![Hall of fame](examples/arcade.gif) | ![Skyline](examples/skyline.gif) |
+| `arcade.py`: an arcade's attract screen, with marching invaders | `skyline.py`: the world's ten tallest buildings, to scale, at dusk |
+| ![Planets](examples/planets.png) | ![Moon phases](examples/moon.png) |
+| `planets.py`: the planets to scale, with the sun too big to fit | `moon.py`: October 2026's moon phases, computed |
+| ![Commits](examples/commits.png) | |
+| `commits.py`: when Redlamp gets built, 1,050 commits by day and hour | |
+
+The trading data, the scores, the hero and the fight are made up; the planets, the buildings, the
+moon and the commits are real.
+
 ## Projects
 
 [**Redlamp's architecture, in six pictures**](projects/redlamp-architecture/): an open-source raw

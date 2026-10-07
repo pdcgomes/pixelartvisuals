@@ -157,6 +157,20 @@ Neutral fills such as `raised` look sunken.
 - A pinned processor outline with `label` in the large font; with `cores`, it adds two rows of 2×2
   squares (needs `h >= 20`). Pins sit 1px outside the box.
 
+`pie(cx, cy, r, parts, *, hole=0.0, start=-90.0, sep=None, rim=True) -> [label points]`
+- `parts` are `(value, colour)`, clockwise from `start` degrees (12 o'clock by default). `hole`
+  is the inner radius as a share of `r`, for a donut; `sep` draws a colour between slices.
+- Returns a point in the middle of each slice's ring, for labels.
+
+`radar(cx, cy, r, values, color, *, vmax=1.0, labels=None, rings=4, ring_color="line", label_color="text", pattern="checker") -> [points]`
+- A spider chart with one spoke per value, clockwise from 12 o'clock, guide rings, and the area
+  filled with a see-through `pattern`. Labels sit 6px beyond the spokes' ends, so leave about the
+  longest label's width on each side.
+
+`heatmap(x, y, rows, *, cell=4, gap=1, colors=None, vmax=None, bevel=False) -> Rect`
+- `rows` of numbers. 0 takes the first colour, and the rest step evenly through the others up to
+  `vmax` (the largest value by default). Returns the grid's Rect.
+
 ## Diagrams
 
 Boxes joined by lines, for architecture and flow diagrams. `examples/diagram.py` uses every part.
@@ -221,6 +235,15 @@ Routing tips:
 - An isometric grid in iso_box coordinates. To centre a `w×d×h` box on a floor with margin `m`, use
   floor apex `(x, y + h - 2m)` and size `(w + 2m, d + 2m)`. Keep sizes multiples of `step` so the
   box edges land on grid lines.
+
+`circle(cx, cy, r, color, *, outline=None) -> Rect`: a filled disc of the pixels whose centres lie
+within `r`; use a `.5` centre for an odd diameter. `outline` rings its edge pixels.
+
+`sphere(cx, cy, r, color, *, light=(-0.55, -0.6), shades=None) -> Rect`: a lit ball, dithered
+between shades (dark, the colour, light by default), lit from `light` (towards the top left).
+
+`polygon(points, *, fill=None, outline=None, pattern=None)`: any shape through integer points.
+`pattern` (a `PATTERNS` name) inks only that share of the fill, for a see-through area.
 
 `sparkles(x, y, w, h, n, colors, *, seed=7, twinkle=0.12)`: scattered pixels; `twinkle` is the share drawn as plus-shaped glints.
 

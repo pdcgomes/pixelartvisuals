@@ -355,6 +355,85 @@ class Widgets:
                 self.rect(gx + c * 3, gy + r * 3, 2, 2, self.light(color) if r == 0 else color)
         return Rect(x, y, w, h)
 
+    # round charts ------------------------------------------------------------
+
+    def pie(self, cx: float, cy: float, r: float, parts, *, hole: float = 0.0, start: float = -90.0, sep=None,
+            rim: bool = True) -> list[tuple[int, int]]:
+        """Pie of (value, colour) parts, clockwise from `start` degrees (-90 is twelve o'clock); a
+        donut when `hole` is a fraction of r. `sep` draws the cuts between slices and `rim` darkens
+        the outer edge. Returns a point just outside the rim at each slice's middle, for labels."""
+        total = sum(v for v, _ in parts) or 1
+        bounds, acc = [], 0.0
+        for v, col in parts:
+            bounds.append((acc / total, (acc + v) / total, col))
+            acc += v
+        cuts = [b[0] for b in bounds]
+        for py in range(int(cy - r) - 1, int(cy + r) + 2):
+            for px in range(int(cx - r) - 1, int(cx + r) + 2):
+                dx, dy = px + 0.5 - cx, py + 0.5 - cy
+                d = math.hypot(dx, dy)
+                if d >= r or d < hole * r:
+                    continue
+                turn = (math.degrees(math.atan2(dy, dx)) - start) % 360 / 360
+                col = next(c for a0, a1, c in bounds if a0 <= turn < a1 or a1 == 1 and turn >= a0)
+                if sep is not None and len(parts) > 1:
+                    near = min(min(abs(turn - k), 1 - abs(turn - k)) for k in cuts)
+                    if near * 2 * math.pi * d < 0.7:
+                        col = sep
+                if rim and d > r - 1 and col != sep:
+                    col = self.dark(col)
+                self.px(px, py, col)
+        out = []
+        for a0, a1, _ in bounds:
+            a = math.radians(start + (a0 + a1) / 2 * 360)
+            out.append((round(cx + (r + 5) * math.cos(a)), round(cy + (r + 5) * math.sin(a))))
+        return out
+
+    def radar(self, cx: float, cy: float, r: float, values, color, *, vmax: float = 1.0, labels=None, rings: int = 4,
+              ring_color="line", label_color="text", pattern="checker") -> list[tuple[int, int]]:
+        """Spider chart: one spoke per value, clockwise from twelve o'clock, with `rings` guide rings
+        and the area filled with a see-through `pattern`. Returns the data points."""
+        n = len(values)
+
+        def point(i, rr):
+            a = math.radians(-90 + 360 * i / n)
+            return round(cx + rr * math.cos(a)), round(cy + rr * math.sin(a))
+
+        for k in range(1, rings + 1):
+            ring = [point(i, r * k / rings) for i in range(n)]
+            self.polyline(ring + ring[:1], ring_color)
+        for i in range(n):
+            self.line(round(cx), round(cy), *point(i, r), ring_color)
+        data = [point(i, r * clamp(v / vmax)) for i, v in enumerate(values)]
+        self.polygon(data, fill=color, pattern=pattern, outline=self.light(color))
+        for px, py in data:
+            self.rect(px - 1, py - 1, 3, 3, self.light(color))
+        for i, label in enumerate(labels or []):
+            lx, ly = point(i, r + 6)
+            dx = math.cos(math.radians(-90 + 360 * i / n))
+            dy = math.sin(math.radians(-90 + 360 * i / n))
+            align = "right" if dx < -0.25 else "left" if dx > 0.25 else "center"
+            self.text(lx, ly - (5 if dy < -0.9 else 0 if dy > 0.9 else 2), label, label_color, align=align)
+        return data
+
+    def heatmap(self, x: int, y: int, rows, *, cell: int = 4, gap: int = 1, colors=None, vmax=None,
+                bevel: bool = False):
+        """Grid of cells shaded by value: rows of numbers, 0 in the first colour and the rest in
+        equal steps through the others up to `vmax`. Returns the grid's Rect."""
+        colors = colors or ["raised", "green.dark", "green", "green.light"]
+        vmax = vmax or max((max(row) for row in rows if row), default=1) or 1
+        steps = len(colors) - 1
+        for j, row in enumerate(rows):
+            for i, v in enumerate(row):
+                k = 0 if v <= 0 else min(steps, 1 + int(clamp(v / vmax) * steps - 1e-9))
+                cx, cy = x + i * (cell + gap), y + j * (cell + gap)
+                if bevel:
+                    self.tile(cx, cy, cell, colors[k])
+                else:
+                    self.rect(cx, cy, cell, cell, colors[k])
+        cols = max((len(row) for row in rows), default=0)
+        return Rect(x, y, cols * (cell + gap) - gap, len(rows) * (cell + gap) - gap)
+
     # diagrams ----------------------------------------------------------------
 
     def dashes(self, x: int, y: int, length: int, color, *, vertical: bool = False, on: int = 2, off: int = 2) -> None:
