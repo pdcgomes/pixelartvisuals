@@ -51,8 +51,10 @@ Colours can be a theme name (`"panel"`, `"green"`, `"green.light"`, `"green.dark
   The right edge is exclusive, so right-aligned text ends at `x - 1`.
 - `font`: `"small"` (cap height 5, line step 7) or `"large"` (cap 7, step 10). Accented capitals use 2px
   above the cap and cedillas 2px below.
+- `font="code"` is the large font with lowercase (x-height 5, descenders 2px below the baseline,
+  line step 11) and keeps the text's case, for code and anything else that must not be shouted.
 - `shadow` draws the text again offset by `shadow_offset` logical pixels; `outline` rings every pixel.
-- Text is upper-cased. Smart quotes, the minus sign and non-breaking spaces are normalised. Missing
+- Text in `small` and `large` is upper-cased. Smart quotes, the minus sign and non-breaking spaces are normalised. Missing
   glyphs draw as `?` and are reported on save.
 
 `spans(x, y, parts, color="dim", *, font="small", scale=1, align="left", shadow=None) -> width`

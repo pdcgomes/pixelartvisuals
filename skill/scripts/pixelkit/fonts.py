@@ -241,8 +241,10 @@ class Glyph:
 
 
 class Font:
-    def __init__(self, name: str, glyphs: dict, marks: dict, cap: int, gap: int, ascent: int = 2, tracking: int = 1):
+    def __init__(self, name: str, glyphs: dict, marks: dict, cap: int, gap: int, ascent: int = 2, tracking: int = 1,
+                 upper: bool = True):
         self.name = name
+        self.upper = upper
         self.cap = cap
         self.gap = gap
         self.ascent = ascent
@@ -258,7 +260,8 @@ class Font:
         return self.cap + self.gap + (self.ascent if marks else 0)
 
     def normalize(self, text) -> str:
-        return "".join(NORMALIZE.get(ch, ch) for ch in str(text)).upper()
+        norm = "".join(NORMALIZE.get(ch, ch) for ch in str(text))
+        return norm.upper() if self.upper else norm
 
     def glyph(self, ch: str) -> Glyph:
         g = self._cache.get(ch)
@@ -312,7 +315,39 @@ class Font:
         return lines
 
 
+# Lowercase on the large font's grid, for code: x-height 5 (from row 2), ascenders to the cap,
+# descenders 2 rows below the baseline.
+LOWER = {
+    "a": (2, ".###./....#/.####/#...#/.####"),
+    "b": "#..../#..../####./#...#/#...#/#...#/####.",
+    "c": (2, ".####/#..../#..../#..../.####"),
+    "d": "....#/....#/.####/#...#/#...#/#...#/.####",
+    "e": (2, ".###./#...#/#####/#..../.####"),
+    "f": "..##/.#../.#../###./.#../.#../.#..",
+    "g": (2, ".####/#...#/#...#/#...#/.####/....#/.###."),
+    "h": "#..../#..../####./#...#/#...#/#...#/#...#",
+    "i": ".#./.../##./.#./.#./.#./###",
+    "j": "..#/.../.##/..#/..#/..#/..#/#.#/.#.",
+    "k": "#.../#.../#..#/#.#./##../#.#./#..#",
+    "l": "##./.#./.#./.#./.#./.#./###",
+    "m": (2, "##.#./#.#.#/#.#.#/#.#.#/#.#.#"),
+    "n": (2, "####./#...#/#...#/#...#/#...#"),
+    "o": (2, ".###./#...#/#...#/#...#/.###."),
+    "p": (2, "####./#...#/#...#/#...#/####./#..../#...."),
+    "q": (2, ".####/#...#/#...#/#...#/.####/....#/....#"),
+    "r": (2, "#.##/##../#.../#.../#..."),
+    "s": (2, ".####/#..../.###./....#/####."),
+    "t": ".#../.#../###./.#../.#../.#../..##",
+    "u": (2, "#...#/#...#/#...#/#...#/.####"),
+    "v": (2, "#...#/#...#/#...#/.#.#./..#.."),
+    "w": (2, "#...#/#.#.#/#.#.#/#.#.#/.#.#."),
+    "x": (2, "#...#/.#.#./..#../.#.#./#...#"),
+    "y": (2, "#...#/#...#/#...#/#...#/.####/....#/.###."),
+    "z": (2, "#####/...#./..#../.#.../#####"),
+}
+
 FONTS = {
     "small": Font("small", SMALL, SMALL_MARKS, cap=5, gap=2),
     "large": Font("large", LARGE, LARGE_MARKS, cap=7, gap=3),
+    "code": Font("code", {**LARGE, **LOWER}, LARGE_MARKS, cap=7, gap=4, upper=False),
 }
