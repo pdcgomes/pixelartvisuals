@@ -83,7 +83,9 @@ Glyphs: A–Z, 0–9, `. , : ; ! ? ' " ` - + = * % / \ ( ) [ ] { } < > _ | ^ ~ #
 - Wraps `lines` (a string or a list) across the width, draws a rule above them, and puts
   `theme.brand.name` at the right when it's set. Call it before laying out panels.
 
-`mark(x, y, mark="stripes") -> (w, h)`: the brand mark (9×6 series stripes or a PNG at 1×).
+`mark(x, y, mark="stripes") -> (w, h)`: the brand mark: 9×6 series stripes, a
+`(sprite rows, colour map)` pair (`projects/redlamp-architecture/series.py` has an example), or
+a PNG at 1×. `header(mark=...)` takes the same values.
 
 `Rect(x, y, w, h)`: a NamedTuple, so `c.rect(*r, "panel")` works.
 - `x2`, `y2` (exclusive), `cx`, `cy`
@@ -166,9 +168,11 @@ Boxes joined by lines, for architecture and flow diagrams. `examples/diagram.py`
 - Registers itself as a region: overlapping nodes, and titles too long for their box, are
   reported.
 
-`connect(a, b, color, *, via=None, ax=None, bx=None, label=None, label_color="dim", dotted=False, head=True) -> [points]`
+`connect(a, b, color, *, via=None, ax=None, bx=None, side=None, label=None, label_color="dim", dotted=False, head=True) -> [points]`
 - An orthogonal elbow from Rect `a`'s facing edge to Rect `b`'s, ending in a head just outside
   `b`. The run is vertical when one Rect is above the other, horizontal otherwise.
+- `side="top"` or `"bottom"` leaves and enters both boxes through that edge: a U-shaped run for
+  boxes in the same row. Give several such runs different `via` lanes so they don't overlap.
 - `ax` and `bx` move the anchors along the edges (an x for vertical runs, a y for horizontal
   ones), so several lines can leave one box apart.
 - `via` puts the middle segment in a chosen gutter, and `label` sits beside that segment.
