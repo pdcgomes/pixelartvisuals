@@ -34,7 +34,7 @@ for i, name in enumerate(c.theme.accents):
 x = pal.x
 for i, name in enumerate(ICONS):
     w, h = c.icon(x, pal.y + 33 - len(ICONS[name].split("/")), name, c.series(i))
-    x += w + 3
+    x += w + 2
 
 top = hero.y2 + 6
 parts = c.panel(4, top, 312, bottom - 2 - top, "PARTS", color="gold", sub="BARS · METERS · LINES · LABELS")

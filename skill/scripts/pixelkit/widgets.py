@@ -354,3 +354,110 @@ class Widgets:
                 r, c = divmod(k, per_row)
                 self.rect(gx + c * 3, gy + r * 3, 2, 2, self.light(color) if r == 0 else color)
         return Rect(x, y, w, h)
+
+    # diagrams ----------------------------------------------------------------
+
+    def dashes(self, x: int, y: int, length: int, color, *, vertical: bool = False, on: int = 2, off: int = 2) -> None:
+        """Dashed line, `on` pixels drawn then `off` skipped, for boundaries."""
+        for i in range(0, length, on + off):
+            n = min(on, length - i)
+            if vertical:
+                self.vline(x, y + i, n, color)
+            else:
+                self.hline(x + i, y, n, color)
+
+    def _segment(self, x0: int, y0: int, x1: int, y1: int, color, dotted: bool) -> None:
+        vertical = x0 == x1
+        start, n = (min(y0, y1), abs(y1 - y0) + 1) if vertical else (min(x0, x1), abs(x1 - x0) + 1)
+        if dotted:
+            self.dashes(x0 if vertical else start, start if vertical else y0, n, color, vertical=vertical,
+                        on=1, off=1)
+        elif vertical:
+            self.vline(x0, start, n, color)
+        else:
+            self.hline(start, y0, n, color)
+
+    def _head(self, x: int, y: int, direction: str, color) -> None:
+        for k in range(3):
+            if direction == "right":
+                self.vline(x - k, y - k, 2 * k + 1, color)
+            elif direction == "left":
+                self.vline(x + k, y - k, 2 * k + 1, color)
+            elif direction == "down":
+                self.hline(x - k, y - k, 2 * k + 1, color)
+            else:
+                self.hline(x - k, y + k, 2 * k + 1, color)
+
+    def arrow(self, x0: int, y0: int, x1: int, y1: int, color, *, dotted: bool = False, head: bool = True) -> None:
+        """Horizontal or vertical arrow; the 3px head's tip sits on (x1, y1)."""
+        if x0 != x1 and y0 != y1:
+            raise ValueError("arrow() draws horizontal or vertical lines; use connect() for an elbow")
+        self._segment(x0, y0, x1, y1, color, dotted)
+        if head and (x0, y0) != (x1, y1):
+            direction = ("right" if x1 > x0 else "left") if y0 == y1 else ("down" if y1 > y0 else "up")
+            self._head(x1, y1, direction, color)
+
+    def connect(self, a, b, color, *, via=None, ax=None, bx=None, label=None, label_color="dim",
+                dotted: bool = False, head: bool = True) -> list[tuple[int, int]]:
+        """Orthogonal elbow from Rect a's facing edge to Rect b's, ending in a head on b's edge.
+        Vertical when one is above the other, otherwise horizontal. `ax`/`bx` move the anchor along
+        each edge (an x for vertical runs, a y for horizontal ones), `via` sets where the middle
+        segment runs, and `label` sits beside it. Returns the corner points."""
+        if b.y >= a.y2 or a.y >= b.y2:
+            down = b.y >= a.y2
+            sx, ex = (a.cx if ax is None else ax), (b.cx if bx is None else bx)
+            sy, ey = (a.y2, b.y - 1) if down else (a.y - 1, b.y2)
+            mid = (sy + ey) // 2 if via is None else via
+            pts = [(sx, sy), (sx, mid), (ex, mid), (ex, ey)]
+        else:
+            right = b.x >= a.x2
+            sy, ey = (a.cy if ax is None else ax), (b.cy if bx is None else bx)
+            sx, ex = (a.x2, b.x - 1) if right else (a.x - 1, b.x2)
+            mid = (sx + ex) // 2 if via is None else via
+            pts = [(sx, sy), (mid, sy), (mid, ey), (ex, ey)]
+        pts = [p for i, p in enumerate(pts) if i == 0 or p != pts[i - 1]]
+        for (x0, y0), (x1, y1) in zip(pts, pts[1:-1]):
+            self._segment(x0, y0, x1, y1, color, dotted)
+        if len(pts) > 1:
+            (x0, y0), (x1, y1) = pts[-2], pts[-1]
+            self.arrow(x0, y0, x1, y1, color, dotted=dotted, head=head)
+        if label:
+            (x0, y0), (x1, y1) = pts[len(pts) // 2 - 1], pts[len(pts) // 2]
+            if y0 == y1:
+                self.text((x0 + x1) // 2, y0 - 7, label, label_color, align="center")
+            else:
+                self.text(x0 + 3, (y0 + y1) // 2 - 2, label, label_color)
+        return pts
+
+    def bus(self, x: int, y: int, w: int, color, taps=(), *, thick: int = 2, heads: bool = True,
+            dotted: bool = False):
+        """A rail many parts connect to, instead of a line each. `taps` are Rects (or (Rect, x)
+        pairs) above or below the rail; each gets a stub to it, with a head on the rail. Returns
+        the rail's Rect."""
+        self.rect(x, y, w, thick, color)
+        for tap in taps:
+            r, tx = (tap, tap.cx) if isinstance(tap, Rect) else tap
+            if r.y2 <= y:
+                self.arrow(tx, r.y2, tx, y - 1, color, dotted=dotted, head=heads)
+            elif r.y >= y + thick:
+                self.arrow(tx, r.y - 1, tx, y + thick, color, dotted=dotted, head=heads)
+        return Rect(x, y, w, thick)
+
+    def node(self, x: int, y: int, w: int, h: int, title, *, color="cyan", sub=None, badge=None,
+             badge_color="dim", fill="panel", border="line", align: str = "left"):
+        """A box for a module or component: border, accent band along the top, white title,
+        optional dim subtitle and a small badge at the right of the title row. Registers itself
+        so the overlap checks cover it. Returns its Rect."""
+        r = Rect(x, y, w, h)
+        self.claim(r, f"node {title!r}")
+        self.rect(x, y, w, h, fill)
+        self.box(x, y, w, h, border)
+        self.hline(x + 1, y + 1, w - 2, color)
+        ty = y + 4
+        tx = x + w // 2 if align == "center" else x + 3
+        self.text(tx, ty, title, "white", align=align)
+        if sub:
+            self.text(tx, ty + 7, sub, "dim", align=align)
+        if badge:
+            self.text(x + w - 3, ty, badge, badge_color, align="right")
+        return r

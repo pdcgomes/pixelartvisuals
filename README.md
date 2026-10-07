@@ -28,9 +28,8 @@ The repo holds two things:
 | `ranking.py`: a hero total, a share bar and a top 10 | `generations_intro.py`: bars rise, values count up |
 | ![Waffle](skill/examples/waffle.png) | ![Cover](skill/examples/cover.png) |
 | `waffle.py`: parts of a whole | `cover.py`: a post cover and social card |
-
-[`specimen.png`](skill/examples/specimen.png) shows every glyph, colour, icon and part.
-
+| ![Diagram](skill/examples/diagram.png) | ![Specimen](skill/examples/specimen.png) |
+| `diagram.py`: nodes, a bus and connectors | `specimen.py`: every glyph, colour, icon and part |
 ## Quick start
 
 Requires Python 3.11 or later with Pillow and numpy. ffmpeg is needed only for MP4.

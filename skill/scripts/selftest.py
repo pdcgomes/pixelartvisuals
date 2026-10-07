@@ -41,8 +41,33 @@ cases = [
     ("region nested in a panel", lambda c: (c.panel(0, 20, 100, 60), c.claim(Rect(4, 30, 20, 20), "part")), None),
     ("panel under the footer", lambda c: (c.panel(0, 20, 100, 170), c.footer("SRC")), "overlap"),
     ("off the canvas", lambda c: c.text(310, 20, "LONG LABEL"), "off the canvas"),
+    ("nodes partly overlapping", lambda c: (c.node(0, 20, 60, 19, "A"), c.node(40, 30, 60, 19, "B")), "overlap"),
+    ("node title too long for its box", lambda c: c.node(0, 20, 30, 19, "MUCH TOO LONG"), "crosses the edge of node"),
+    ("connected nodes stay clean", lambda c: c.connect(c.node(0, 20, 60, 19, "A"), c.node(80, 60, 60, 19, "B"),
+                                                         "line", label="USES"), None),
 ]
 passed = all(expect(label, notes(build), needle) for label, build, needle in cases)
+
+
+def expect_true(label: str, ok: bool, detail: str = "") -> bool:
+    print(f"{'ok ' if ok else 'FAIL'} {label}" + ("" if ok else f": {detail}"))
+    return ok
+
+
+c = Canvas(preset="wide")
+a, b = Rect(10, 20, 40, 19), Rect(90, 80, 40, 19)
+pts = c.connect(a, b, "white")
+passed &= expect_true("connect runs from a's bottom edge to a head on b's top edge",
+                      pts[0] == (a.cx, a.y2) and pts[-1] == (b.cx, b.y - 1)
+                      and c.img.getpixel((b.cx, b.y - 1)) == c.rgb("white"), str(pts))
+rail = c.bus(0, 120, 200, "white", [Rect(20, 100, 30, 10), Rect(120, 140, 30, 10)])
+passed &= expect_true("bus taps reach the rail from above and below",
+                      c.img.getpixel((35, 119)) == c.rgb("white") and c.img.getpixel((135, 122)) == c.rgb("white"))
+try:
+    c.arrow(0, 0, 10, 10, "white")
+    passed &= expect_true("diagonal arrows are refused", False, "no error")
+except ValueError:
+    passed &= expect_true("diagonal arrows are refused", True)
 
 FONTS["small"].missing.clear()
 FONTS["large"].missing.clear()

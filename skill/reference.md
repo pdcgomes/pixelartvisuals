@@ -12,6 +12,7 @@ Colours can be a theme name (`"panel"`, `"green"`, `"green.light"`, `"green.dark
 - Text
 - Layout
 - Charts and widgets
+- Diagrams
 - Illustration
 - Animation
 - Export and checks
@@ -154,6 +155,42 @@ Neutral fills such as `raised` look sunken.
 - A pinned processor outline with `label` in the large font; with `cores`, it adds two rows of 2×2
   squares (needs `h >= 20`). Pins sit 1px outside the box.
 
+## Diagrams
+
+Boxes joined by lines, for architecture and flow diagrams. `examples/diagram.py` uses every part.
+
+`node(x, y, w, h, title, *, color="cyan", sub=None, badge=None, badge_color="dim", fill="panel", border="line", align="left") -> Rect`
+- A box with a 1px border, a 1px accent band along the top, a white title 4px from the top, an
+  optional dim subtitle 7px below it, and an optional badge right-aligned on the title row.
+- Use `h=12` for a title only and `h=19` with a subtitle.
+- Registers itself as a region: overlapping nodes, and titles too long for their box, are
+  reported.
+
+`connect(a, b, color, *, via=None, ax=None, bx=None, label=None, label_color="dim", dotted=False, head=True) -> [points]`
+- An orthogonal elbow from Rect `a`'s facing edge to Rect `b`'s, ending in a head just outside
+  `b`. The run is vertical when one Rect is above the other, horizontal otherwise.
+- `ax` and `bx` move the anchors along the edges (an x for vertical runs, a y for horizontal
+  ones), so several lines can leave one box apart.
+- `via` puts the middle segment in a chosen gutter, and `label` sits beside that segment.
+- Returns the corner points.
+
+`arrow(x0, y0, x1, y1, color, *, dotted=False, head=True)`: a straight horizontal or vertical
+arrow whose 3px head's tip sits on `(x1, y1)`. Diagonal arrows raise `ValueError`.
+
+`bus(x, y, w, color, taps=(), *, thick=2, heads=True, dotted=False) -> Rect`: a rail that many
+parts connect to instead of a line each, such as a shared dependency. `taps` are Rects, or
+`(Rect, x)` pairs, above or below the rail. Each gets a stub with its head on the rail.
+
+`dashes(x, y, length, color, *, vertical=False, on=2, off=2)`: a dashed line, for boundaries
+such as a process or sandbox edge.
+
+Routing tips:
+- Lay nodes out in rows by layer, and route connectors through the gutters between rows with
+  `via`.
+- Draw the most shared dependency as a `bus`.
+- Use `dotted=True` for optional or runtime links and solid lines for build-time ones.
+- Lines aren't collision-checked, so look at the PNG for crossings.
+
 ## Illustration
 
 `sprite(x, y, art, colors, *, scale=1, flip=False) -> (w, h)`
@@ -161,7 +198,8 @@ Neutral fills such as `raised` look sunken.
   are transparent.
 
 `icon(x, y, name, color, *, scale=1) -> (w, h)`
-- `ICONS`: bolt, heart, star, clock, check, cross, note, play, warn, cpu, temp, disc, invader, up, down.
+- `ICONS`: bolt, heart, star, clock, check, cross, note, play, warn, cpu, temp, disc, invader, up,
+  down, file, folder, package, lock.
 
 `iso_box(x, y, w, d, h, *, top, left, right, edge=None, corner=None, outline=None, shadow=None, patterns=None) -> Iso`
 - `(x, y)` is the back corner of the top face. `w` units run down-right and `d` units down-left (2px

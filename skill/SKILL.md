@@ -48,6 +48,7 @@ the blog keeps images, ask; otherwise use `graphics/` in the current project.
 | `examples/dashboard.py` | wide | State of a machine or project: panels, LED columns, line charts, memory map, gauges, isometric device |
 | `examples/ranking.py` | standard | Top-N lists: hero total, share bar, horizontal bars, small bar chart with day labels |
 | `examples/waffle.py` | square | Parts of a whole: 10×10 waffle, group totals bracketed beside their rows, context row |
+| `examples/diagram.py` | wide | Architecture and flow diagrams: nodes, a bus, elbow connectors, a dashed boundary, icons |
 | `examples/cover.py` | og | Post covers and social cards: kicker, 2× title, rainbow rule, stats, device on an iso floor |
 | `examples/generations_intro.py` | standard | Animated intro (GIF): bars rise in turn, values count up, deltas pop in, then hold |
 | `examples/dashboard_live.py` | wide | Animated seamless loop (GIF): ticking readings, blinking LED, rising dust, scrolling charts |
@@ -105,6 +106,10 @@ These are what make the output match the look; follow them unless the user asks 
 - Rankings `hbars`, parts of a whole `waffle` or `stacked` + `legend`, per-core loads `seg_column`,
   trends `grid` + `spark(fill=...)`, levels `meter` / `gauge`, stat lists `kv`, deltas `tag`,
   processors `chip`, bevelled swatches `tile`.
+- Architecture and flows: `node` boxes in rows by layer, `connect` elbows routed through the gutters
+  (`via`), a `bus` for the dependency everything shares, and `dashes` for a process or sandbox
+  boundary. A system too big for one image becomes a series: one idea per image, with the same
+  header and colours throughout.
 
 ## Review checklist
 
