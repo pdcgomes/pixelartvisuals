@@ -1,0 +1,46 @@
+# Brand theme for pixel graphics. Every render reads this file, so changes here
+# restyle all future graphics. Code refers to colours by name: "panel", "green",
+# "green.dark", "green.light". Point PIXELKIT_THEME at another file to switch brands.
+
+name = "navy"
+
+# Each logical pixel becomes scale x scale pixels in the exported PNG.
+scale = 4
+
+# Order used when a chart colours its items automatically.
+series = ["green", "yellow", "orange", "red", "purple", "blue"]
+
+# Number formatting for Canvas.num().
+thousands = ","
+decimal = "."
+
+[brand]
+# Shown at the right of footers when set, e.g. "PEDRO.DEV".
+name = ""
+# Header mark: "stripes" (series colours), "none", or a path to a small PNG drawn at 1x.
+mark = "stripes"
+
+[colors]
+shadow = "#04060b"  # cast shadows, deepest tone
+bg     = "#0a0e15"  # page background
+panel  = "#131723"  # panel fill
+raised = "#1d2232"  # empty meter segments and tracks
+line   = "#2b3145"  # borders, axes, gridlines
+dim    = "#5d6981"  # secondary labels, subtitles, axis ticks
+muted  = "#8c95ad"  # icon outlines, tertiary text
+text   = "#c3c9d6"  # body text
+white  = "#f3f4f9"  # headlines and key values
+
+# Accents: base fill, dark (stripes, sides, shading) and light (rims, highlights).
+[accents]
+green  = { base = "#61bb46", dark = "#3f752d", light = "#9fd599" }
+yellow = { base = "#fdb827", dark = "#9f6f1b", light = "#fed682" }
+orange = { base = "#f5821f", dark = "#99510f", light = "#f3b77b" }
+red    = { base = "#e03a3e", dark = "#8d2127", light = "#ed8d8d" }
+purple = { base = "#963d97", dark = "#5d275d", light = "#c28ec3" }
+blue   = { base = "#009ddc", dark = "#036387", light = "#69c9ed" }
+cyan   = { base = "#39d5db", dark = "#228083", light = "#8ce7ea" }
+lime   = { base = "#76b900", dark = "#476f00", light = "#b0d66b" }
+sky    = { base = "#45a5ff", dark = "#296399", light = "#93cbff" }
+violet = { base = "#c981ff", dark = "#794d99", light = "#e0b6ff" }
+gold   = { base = "#ffd53f", dark = "#998026", light = "#ffe790" }
