@@ -70,4 +70,5 @@ def draw(c, t):
         c.meter(rank.x + 10, y + 7, rank.w - 10, 1, metres / 828, "gold" if i == 0 else "sky", track="raised", rim=False)
 
 
-animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=4, fps=10, seamless=True)
+if __name__ == "__main__":
+    animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=4, fps=10, seamless=True)

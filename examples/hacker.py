@@ -165,4 +165,5 @@ def draw(c, t):
     c.img.paste(ImageChops.multiply(c.img, lines))
 
 
-animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=6, fps=10, poster=0.97)
+if __name__ == "__main__":
+    animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=6, fps=10, poster=0.97)

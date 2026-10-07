@@ -121,4 +121,5 @@ def draw(c, t):
             c.text(x + 28, y, fx, "orange" if fx != "..." else "#30303c")
 
 
-animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=3.2, fps=10, seamless=True)
+if __name__ == "__main__":
+    animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=3.2, fps=10, seamless=True)

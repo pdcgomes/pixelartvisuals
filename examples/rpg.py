@@ -113,4 +113,5 @@ def draw(c, t):
         c.text(quest.x + 196, y, note, color)
 
 
-animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=4, fps=8, seamless=True)
+if __name__ == "__main__":
+    animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=4, fps=8, seamless=True)

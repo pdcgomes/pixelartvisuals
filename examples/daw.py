@@ -100,4 +100,5 @@ def draw(c, t):
         c.text(x + 15, 165, name[:6] if name != "OPEN HAT" else "OHAT", colour, align="center")
 
 
-animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=1.6, fps=10, seamless=True)
+if __name__ == "__main__":
+    animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=1.6, fps=10, seamless=True)

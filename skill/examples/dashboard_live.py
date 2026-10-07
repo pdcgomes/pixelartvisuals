@@ -105,4 +105,5 @@ def draw(c, t):
         c.text(tx, 170, f"{temp}°C", "white")
 
 
-animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=SECONDS, fps=FPS, seamless=True)
+if __name__ == "__main__":
+    animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=SECONDS, fps=FPS, seamless=True)

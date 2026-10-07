@@ -154,4 +154,5 @@ def draw(c, t):
     c.text(now.x2 - 2, now.y2 - 6, "AIRPLAY → KITCHEN", "dim", align="right")
 
 
-animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=4, fps=10, seamless=True)
+if __name__ == "__main__":
+    animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=4, fps=10, seamless=True)

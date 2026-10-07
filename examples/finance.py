@@ -121,4 +121,5 @@ def draw(c, t):
     c.footer("FICTIONAL TICKERS ON A SEEDED RANDOM WALK. NOT INVESTMENT ADVICE, NOT EVEN INVESTMENT.")
 
 
-animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=4, fps=10, seamless=True)
+if __name__ == "__main__":
+    animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=4, fps=10, seamless=True)

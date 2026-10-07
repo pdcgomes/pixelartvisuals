@@ -431,4 +431,5 @@ def draw(c, t):
            "lime" if online is not None else "dim")
 
 
-animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=SECONDS, fps=8, hold=2.5, poster=0.6)
+if __name__ == "__main__":
+    animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=SECONDS, fps=8, hold=2.5, poster=0.6)

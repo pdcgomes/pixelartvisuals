@@ -84,4 +84,5 @@ def draw(c, t):
     c.text(314, 175, "CREDIT 00", "white", align="right")
 
 
-animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=4, fps=8, seamless=True, poster=0.0)
+if __name__ == "__main__":
+    animate(draw, Path(__file__).with_suffix(".gif"), preset="wide", seconds=4, fps=8, seamless=True, poster=0.0)
