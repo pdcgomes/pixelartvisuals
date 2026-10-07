@@ -14,6 +14,8 @@ Colours can be a theme name (`"panel"`, `"green"`, `"green.light"`, `"green.dark
 - Charts and widgets
 - Diagrams
 - Illustration
+- Effects
+- Game HUD
 - Animation
 - Export and checks
 - Theme file
@@ -26,6 +28,16 @@ Colours can be a theme name (`"panel"`, `"green"`, `"green.light"`, `"green.dark
 - Give `w, h` for a custom size, otherwise the preset decides size and export scale.
 - `theme`: a path to a theme file or a `Theme`; defaults to `PIXELKIT_THEME` or the skill's `theme.toml`.
 - Attributes: `w`, `h`, `scale`, `theme`, `img` (the 1× PIL image), `bounds` (a `Rect`).
+
+`sub(w, h, bg="bg") -> Canvas`: a blank canvas with the same theme, for a part that must stay inside
+its box (a clipped marquee, a game's scene above its interface, a picture to hang on a wall).
+
+`paste(src, x, y, *, key=None, shear=0, stretch=(1, 1), outline=None)`: pastes a sub-canvas or PIL
+image. Pixels of colour `key` are transparent. `shear=1` slides each pair of columns 1px down so a
+flat picture lies on an iso wall running down-right (`-1` up-right). `stretch=(2, 1)` doubles each
+pixel's width first, for the wide pixels of 160-column games. With a `key` (and no shear), `outline`
+rings the pasted shape with a 1px border, for a figure built part by part on a keyed sub-canvas.
+Anything off the canvas is dropped.
 
 `rgb(c)`, `light(c)`, `dark(c)` (shade names for accents, mixed shades for anything else),
 `series(i)` (the i-th colour of `theme.series`, cycling), `num(value, decimals=0)` (theme separators).
@@ -213,9 +225,13 @@ Routing tips:
 
 ## Illustration
 
-`sprite(x, y, art, colors, *, scale=1, flip=False) -> (w, h)`
+`sprite(x, y, art, colors, *, scale=1, flip=False, outline=None, shade=False) -> (w, h)`
 - `art` is a multi-line string or a list of rows. Each character maps through `colors`; `.` and spaces
   are transparent.
+- `outline` rings the silhouette with one cell of that colour (reaching one cell beyond the art), so
+  characters read against busy or dark scenes.
+- `shade=True` lights the top edge of every same-letter region and darkens its bottom (then side)
+  edges, so flat parts gain volume lit from the top left.
 
 `icon(x, y, name, color, *, scale=1) -> (w, h)`
 - `ICONS`: bolt, heart, star, clock, check, cross, note, play, warn, cpu, temp, disc, invader, up,
@@ -238,6 +254,18 @@ Routing tips:
   floor apex `(x, y + h - 2m)` and size `(w + 2m, d + 2m)`. Keep sizes multiples of `step` so the
   box edges land on grid lines.
 
+`iso_xy(ox, oy, u, v, z=0) -> (x, y)` (module function): the screen point of grid point `(u, v)`
+raised `z` px on an iso grid with origin `(ox, oy)`, at iso_box's slope. Build rooms, floors and
+maps with it: `P = lambda u, v, z=0: iso_xy(OX, OY, u, v, z)`.
+
+`iso_tile(ox, oy, u, v, w=1, d=1, color="line", *, z=0, unit=1, pattern=None, outline=None) -> corners`
+- A flat quad on that grid from cell `(u, v)`, `w` by `d` cells of `unit` iso units, raised `z` px:
+  floor tiles, zones, rugs, a selection cursor (`color=None, outline=...`).
+
+`iso_block(ox, oy, u, v, w, d, h, *, z=0, unit=1, top, left, right, **iso_box) -> Iso`
+- `iso_box` placed by its footprint on the grid, its base `z` px up. Draw blocks back to front (by
+  `u + v`) so nearer ones cover farther ones. `examples/city.py` builds a whole map this way.
+
 `circle(cx, cy, r, color, *, outline=None) -> Rect`: a filled disc of the pixels whose centres lie
 within `r`; use a `.5` centre for an odd diameter. `outline` rings its edge pixels.
 
@@ -253,6 +281,152 @@ between shades (dark, the colour, light by default), lit from `light` (towards t
 - Resizes (box filter when shrinking) and locks the image to the theme palette in Oklab. `colors`
   takes a list of names to restrict the palette, or `"keep"` to paste a pre-pixelated sprite as it is.
   Alpha below `alpha` is transparent.
+
+## Effects
+
+Scene effects in `pixelkit/fx.py`. Each is a pure function of `t` and a seed: nothing carries over
+between frames, so any frame renders alone and motion with whole-number cycles loops seamlessly.
+The light effects mix colours in a few dithered steps (`levels`), so each source colour gains at
+most `levels` shades and GIF palettes stay small.
+
+`particles(x, y, w, h, t, kind="dust", *, n=20, colors=None, seed=7, cycles=1, draw=True, **opts) -> [(x, y, colour)]`
+- Kinds (`PARTICLES`): `rain`, `snow`, `dust`, `motes` fill the area and wrap inside it; `embers`,
+  `smoke`, `sparks`, `wisps` (rising pale-green spirit wisps) start in the area and travel out for one
+  life, changing colour through `colors` as they age (put the youngest colour first).
+- `burst=True` fires an emit kind once: every particle leaves just after `t=0` and is gone by `t=1`.
+  Map a hit's window onto `t` with `phase()`.
+- Each particle lives a whole number of times per loop (`rates` × `cycles`), so loops are seamless.
+- Options override the kind's defaults: `fall` (fill: +1 down, -1 up), `drift` (sideways slant),
+  `sway` (px of wobble), `twinkle` (share of time visible), `angle`, `spread` (degrees), `speed`
+  (px over a life), `gravity`, `wind` (px by the end of a life), `size=(start, end)` radius,
+  `pattern` (see-through puffs), `streak` (rain length), `rates`.
+- `draw=False` only returns the positions, to draw your own sprites there (music notes, leaves).
+
+`darkness(lights, *, region=None, color="shadow", amount=0.85, levels=3, inner=0.55, squash=2.0)`
+- Darkens everything outside light pools. `lights` are `(cx, cy, r)`; each is clear inside
+  `inner * r` and dithers to `amount` towards `color` at `r`. `squash=2` gives the 2:1 ellipse of an
+  iso floor. Draw the scene, then the darkness, then anything that glows (flames, UI).
+
+`glow(cx, cy, r, color="gold", *, amount=0.35, levels=2, squash=1.0, region=None)`: tints towards a
+colour around a point, strongest in the middle: lamp light, a moon's halo, a warm window.
+
+`vignette(amount=0.6, *, region=None, color="shadow", levels=3, inner=0.6)`: darkens towards the
+corners.
+
+`tint(amount, color="white", *, region=None, levels=4)`: mixes a whole region towards a colour, for a
+hit flash, a night grade or a fade through a colour.
+
+`dissolve(p, color="bg", *, region=None)`: an ordered-dither fade in which the share `p` of pixels
+becomes `color`, adding no new colours.
+
+`scanlines(*, region=None, amount=0.35, step=2, color="shadow")`: darkens every `step`-th row.
+
+`reflect(x, y, w, h, t=0.0, *, amp=1, cycles=1, wavelength=6.0, color="bg", amount=0.45, gap=0)`
+- Mirrors the `h` rows above row `y` into the water below it, each row shifted by a whole-pixel
+  ripple and mixed towards `color`. `gap=2` leaves every second row plain, for broken bands.
+  Reflect the sky first, then draw ships and piers and give each its own short reflection.
+
+`shimmer(x, y, w, h, t, color="white", *, n=16, seed=7, cycles=1, length=(2, 5), on=None)`: glinting
+dashes that drift and blink on water; `on` limits them to pixels of that colour (water inside a coastline).
+
+`heat(x, y, w, h, t, *, amp=1, cycles=2, wavelength=5.0)`: heat haze that slides each row of a region
+sideways by a whole-pixel ripple, above lava or fire. It moves pixels only, adding no colours.
+
+`projectile(x0, y0, x1, y1, p, color="white", *, trail=None, length=8, width=1, shards=12, life=0.35, spread=2.0, gravity=4.0, seed=3) -> (x, y) | None`
+- A spell or arrow flying from `(x0, y0)` to `(x1, y1)` as `p` goes 0..1: a `length`-px head and a
+  trail of debris shards dropped at seeded points on the path, fading through the `trail` colours over
+  `life` of the flight and falling under `gravity`.
+- Returns the head's position, or `None` outside `0 < p < 1`. Map the flight's window onto `p` with
+  `phase()`; shards keep falling a little after impact.
+
+`glyph(cx, cy, r, t=0, color="red", *, squash=1.0, runes=6, cycles=1, inner=0.72, accent=None, half=None)`
+- A rune circle: two rings with `RUNES` marks between them, turning `cycles` times per loop. `squash=2`
+  lays it on an iso floor.
+- `half="back"` or `"front"` draws only the far or near side, so the circle can wrap a figure: draw the
+  back half, the figure, then the front half.
+
+`form(color, shades, *, light=(-1, -1), width=2, depth=None, region=None)`
+- Shades every pixel of exactly `color` as a lit volume. `shades` is `(shadow, base, light, rim)`.
+  Edges facing `light` (a step, e.g. `(-1, 1)` for light from the lower left) get a 1px rim and then a
+  `width`-px light band; edges facing away get a `depth`-px shadow with a dithered fringe.
+- Paint a part flat in a marker colour, call `form`, then paint the next part over it, so each part
+  rims against the last. Do it on a keyed `sub` canvas and `paste(..., key=, outline=)` the figure:
+  `examples/dungeon.py` builds its demon this way.
+
+`melt(old, new, p, *, seed=0, width=2, spread=0.4, region=None)`
+- The column-melt screen wipe of early-90s shooters: the `old` screen slides down in `width`-px
+  columns, each starting after a seeded delay within `spread` of the timeline (neighbours stay within
+  a small step, so the edge drips), and accelerating, to reveal `new` behind it.
+- `old` and `new` are Canvases (draw each scene on `c.sub(w, h)`) or PIL images the size of the
+  region; `p` runs 0 (all old) to 1 (all new). It moves pixels only, adding no colours.
+
+`chunky(x, y, text, colors, *, scale=4, font="large", outline="#000000", depth=0, side=None, light=None, dark=None, bevel=1, bow=0.0, weight=0, align="center") -> Rect`
+- Big extruded title lettering in the style of early-90s game logos and menus: the text at `scale`,
+  filled with a dithered top-to-bottom gradient through `colors`, with a `bevel`-px `light` top-left
+  edge and `dark` bottom-right edge, extruded `depth` px down-right in `side` (one colour or a list
+  from near to far) and ringed by `outline`.
+- `weight` fattens every stroke by that many px a side (closing the counters, for logos); `bow > 0`
+  swells the letters towards both ends like a logo seen in perspective (`< 0` towards the middle).
+- `x` is the left, centre or right edge per `align` and `y` the top. It is artwork, so the layout
+  checks skip it; keep small text clear of it yourself. Use it for logos, menu items and big HUD
+  numbers.
+
+Module helpers:
+- `flicker(t, *, seed=0, cycles=(5, 11, 17)) -> 0..1`: a jittery wobble for torch radii and flames,
+  summed sines with whole cycles.
+- `shake(t, amp=1, *, seed=0, cycles=12) -> (dx, dy)`: whole-pixel screen-shake offsets that jump
+  `cycles` times per loop; scale `amp` down over time to settle it.
+- `orbit(cx, cy, rx, ry, t, n, *, cycles=1, offset=0.0) -> [(x, y, front)]`: `n` evenly spaced whole-pixel
+  points on an ellipse turning `cycles` times per loop, sorted back to front. Draw the `front=False`
+  ones before the thing they circle and the rest after (orbiting shards, mirror-ball specks).
+- `RUNES`: the 3×3 rune patterns `glyph` uses, for runes of your own.
+
+## Raycaster
+
+`Raycaster` in `pixelkit/ray.py` draws first-person views of a grid map: Wolfenstein-style DDA
+raycasting at the canvas's own resolution. `examples/doom.py` uses it for its hangar.
+
+`Raycaster(grid, walls, *, floor="#303030", ceiling="#202020", floors=None, ceilings=None, ceiling_grid=None, bright="", fog="#000000", fog_dist=10.0, levels=4, side=0.8, lights=(), dither=True)`
+- `grid`: rows of characters; row `j` is world `y` in `[j, j + 1)` and column `i` is world `x`.
+  Characters in `walls` are solid and map to a wall texture: a small Canvas or PIL image (16×32 works
+  well) or a plain colour. Any other character is open floor.
+- An open cell looks up its floor in `floors` and its ceiling in `ceilings` by its character, falling
+  back to `floor` and `ceiling` (textures or colours, tiled once per cell). `ceiling_grid` gives the
+  ceiling its own layout, for light panels.
+- Light falls off linearly to `fog` at `fog_dist` cells in `levels` steps, so each texture colour
+  gains at most `levels` shades. `dither=True` blends the steps with ordered dithering; `False` bands
+  them, which suits early-90s shooters and keeps GIFs of a moving camera small. Wall faces running
+  along x are dimmed by `side`. Characters in `bright` ignore the fog (lamps, lit doorways, slime).
+  `lights` are `(x, y, radius, amount)` world points that brighten everything near them.
+- `cell(x, y)` and `solid(x, y)` look the map up, for walking paths.
+
+`render(c, x, y, w, h, pos, angle, *, fov=66.0, sprites=(), pitch=0.0, eye=0.5) -> [box or None]`
+- Draws the view from `pos = (x, y)` looking at `angle` degrees (0 is +x, 90 is +y, down the rows)
+  into the `w×h` box at `(x, y)` on canvas `c`. `pitch` moves the horizon in px (a walking bob);
+  `eye` is the camera height in wall heights.
+- `sprites` are billboards: dicts with `x`, `y`, `img` (a Canvas or PIL image), and optionally `key`
+  (transparent colour), `scale` (height in wall heights, default 1), `lift` (height of its base off
+  the floor) and `bright` (no fog, for fireballs). They are sorted by depth and clipped against the
+  walls column by column.
+- Returns each sprite's screen box `(x, y, w, h)`, or `None` when it is behind the camera, in the
+  order given. Everything is a pure function of its arguments, so animate by moving `pos`, `angle`
+  and the sprites with `t`.
+
+## Game HUD
+
+Parts for game interfaces in `pixelkit/hud.py`; `examples/dungeon.py` and `examples/mmo.py` use them.
+
+`bevel(x, y, w, h, face="raised", *, light=None, dark=None, sunk=False, border=None) -> Rect`
+- A raised (or sunk) block with lit top-left and shaded bottom-right edges and an optional outer
+  border: buttons, slots, window frames. Returns the face inside the edges.
+
+`orb(cx, cy, r, frac, color, *, empty="raised", rim="line", t=0.0, waves=1) -> Rect`
+- A glass globe filled to `frac` with a lit liquid whose surface ripples `waves` times per loop, a
+  darker empty part, a rim ring and a glint: life and mana.
+
+`cooldown(x, y, w, h, frac, *, color="shadow", amount=0.6, edge=None)`
+- Shades the share `frac` of a slot still cooling down, as a clockwise sweep from 12 o'clock.
+  `edge` draws the sweep's leading line. Animate `frac` from 1 to 0.
 
 ## Animation
 
@@ -346,4 +520,5 @@ python3 scripts/pixelate.py IN OUT (--width W | --height H) [--colors a,b,c] [--
 - `lock(img, palette, dither=0, alpha=128)`: palette locking for PIL images
 - `load_theme(path=None)`
 - `FONTS["small" | "large"]`: `.measure()`, `.wrap()`, `.line_height()`
-- `PRESETS`, `PATTERNS`, `ICONS`
+- `PRESETS`, `PATTERNS`, `ICONS`, `PARTICLES`
+- `iso_xy`, `flicker`, `shake` (see Illustration and Effects)

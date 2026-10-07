@@ -54,11 +54,19 @@ CRT dials a BBS and starts a download that will take four and a half minutes.
 | `arcade.py`: an arcade's attract screen, with marching invaders | `skyline.py`: the world's ten tallest buildings, to scale, at dusk |
 | ![Planets](examples/planets.png) | ![Moon phases](examples/moon.png) |
 | `planets.py`: the planets to scale, with the sun too big to fit | `moon.py`: October 2026's moon phases, computed |
-| ![Commits](examples/commits.png) | |
-| `commits.py`: when Redlamp gets built, 1,050 commits by day and hour | |
+| ![Commits](examples/commits.png) | ![Isometric action RPG](examples/dungeon.gif) |
+| `commits.py`: when Redlamp gets built, 1,050 commits by day and hour | `dungeon.py`: an isometric action RPG boss fight, with a necromancer and his raised skeletons |
+| ![MMORPG raid](examples/mmo.gif) | ![City builder](examples/city.gif) |
+| `mmo.py`: an MMORPG raid on a molten fire lord in a canyon hold, with unit frames, a minimap, quests, chat and action bars | `city.py`: an isometric city builder in the mid-90s style |
+| ![Pirate adventure](examples/pirate.gif) | ![Lounge adventure](examples/lounge.gif) |
+| `pirate.py`: a point-and-click pirate adventure: an isometric harbour, a ghostly captain, verbs and an inventory | `lounge.py`: a late-80s parser adventure, redrawn as an isometric neon lounge |
+| ![DOOM, redrawn in the kit](examples/doom.gif) | |
+| `doom.py`: DOOM, redrawn in the kit: the title screen, the menus, the melt and the first level | |
 
 The trading data, the scores, the hero and the fight are made up; the planets, the buildings, the
-moon and the commits are real.
+moon and the commits are real. The game screens are homages in the kit's style with original names
+(only `doom.py` keeps its game's logo). The kit's game primitives (particles, light, HUD frames, a
+raycaster and a screen melt) make such scenes cheap to build.
 
 ## Projects
 

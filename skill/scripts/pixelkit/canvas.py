@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 from PIL import Image, ImageDraw
 
 from .art import Art
 from .fonts import FONTS
+from .fx import Fx
 from .geometry import BAYER4, PATTERNS, Rect
+from .hud import Hud
 from .theme import Theme, load_theme
 from .widgets import Widgets
 
@@ -23,7 +26,7 @@ PRESETS = {
     "hd": (480, 270, 4),        # dense 16:9 -> 1920x1080
 }
 
-class Canvas(Widgets, Art):
+class Canvas(Widgets, Art, Fx, Hud):
     """Draw at logical resolution; save() scales up with nearest-neighbour."""
 
     def __init__(self, w: int | None = None, h: int | None = None, *, preset: str = "wide",
@@ -133,6 +136,42 @@ class Canvas(Widgets, Art):
                 k = min(int(pos), n - 1)
                 hit = pos - k > (BAYER4[j % 4][i % 4] + 0.5) / 16
                 self.img.putpixel((i, j), rgbs[k + 1] if hit else rgbs[k])
+
+    # composition -------------------------------------------------------------
+
+    def sub(self, w: int, h: int, bg="bg") -> Canvas:
+        """A blank canvas with this one's theme, for drawing a part that must stay inside its box."""
+        return Canvas(w, h, theme=self.theme, bg=bg, scale=self.scale)
+
+    def paste(self, src, x: int, y: int, *, key=None, shear: int = 0, stretch=(1, 1), outline=None) -> None:
+        """Paste a sub-canvas (or PIL image) with its top-left at (x, y). Pixels of colour `key` are
+        transparent. shear=1 slides each pair of columns 1px down (a picture on a wall running
+        down-right), -1 up; anything off the canvas is dropped. stretch=(2, 1) doubles every pixel's
+        width first, for the wide pixels of 160-column games. outline (with key) rings the pasted shape
+        with a 1px border, so a figure drawn from shapes on a keyed sub-canvas reads like an outlined
+        sprite."""
+        img = src.img if isinstance(src, Canvas) else src.convert("RGB")
+        if tuple(stretch) != (1, 1):
+            img = img.resize((img.width * stretch[0], img.height * stretch[1]), Image.NEAREST)
+        k = self.rgb(key) if key is not None else None
+        if k is not None and outline is not None and not shear:
+            a = np.asarray(img)
+            solid = np.any(a != np.array(k, dtype=a.dtype), axis=2)
+            pad = np.pad(solid, 1)
+            ring = (pad[:-2, 1:-1] | pad[2:, 1:-1] | pad[1:-1, :-2] | pad[1:-1, 2:]) & ~solid
+            ink = self.rgb(outline)
+            for j, i in zip(*np.nonzero(ring)):
+                if 0 <= x + i < self.w and 0 <= y + j < self.h:
+                    self.img.putpixel((x + int(i), y + int(j)), ink)
+        if k is None and not shear:
+            self.img.paste(img, (x, y))
+            return
+        for i in range(img.width):
+            dy = shear * (i // 2)
+            for j in range(img.height):
+                p = img.getpixel((i, j))
+                if p != k and 0 <= x + i < self.w and 0 <= y + dy + j < self.h:
+                    self.img.putpixel((x + i, y + dy + j), p)
 
     # text --------------------------------------------------------------------
 

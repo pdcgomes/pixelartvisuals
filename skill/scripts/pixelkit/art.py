@@ -71,6 +71,12 @@ def lock(img: Image.Image, palette, *, dither: float = 0.0, alpha: int = 128) ->
     return Image.fromarray(out, "RGBA")
 
 
+def iso_xy(ox: float, oy: float, u: float, v: float, z: float = 0) -> tuple[int, int]:
+    """Screen point of grid point (u, v) raised z px, on an iso grid with origin (ox, oy): u runs
+    down-right and v down-left, 2px across and 1px down per unit, as in iso_box."""
+    return round(ox + 2 * (u - v)), round(oy + u + v - z)
+
+
 class Iso:
     """Screen positions on an isometric box with 2:1 edges.
 
@@ -96,13 +102,32 @@ class Iso:
 
 
 class Art:
-    def sprite(self, x: int, y: int, art, colors: dict, *, scale: int = 1, flip: bool = False) -> tuple[int, int]:
-        """Draw ASCII art: each character maps to a colour in `colors`; '.' and ' ' are transparent."""
+    def sprite(self, x: int, y: int, art, colors: dict, *, scale: int = 1, flip: bool = False,
+               outline=None, shade: bool = False) -> tuple[int, int]:
+        """Draw ASCII art: each character maps to a colour in `colors`; '.' and ' ' are transparent.
+        `outline` rings the sprite's silhouette with a 1-cell border (it then reaches one cell further out).
+        shade=True lights the top edge of every same-letter region and darkens its bottom edge (then
+        left and right), so flat parts gain volume lit from the top left."""
         rows = textwrap.dedent(art).strip("\n").split("\n") if isinstance(art, str) else list(art)
-        for j, row in enumerate(rows):
-            for i, ch in enumerate(row[::-1] if flip else row):
-                if ch not in ". ":
-                    self.rect(x + i * scale, y + j * scale, scale, scale, colors[ch])
+        grid = {(i, j): ch for j, row in enumerate(rows) for i, ch in enumerate(row[::-1] if flip else row)
+                if ch not in ". "}
+        if outline is not None:
+            for i, j in grid:
+                for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    if (i + di, j + dj) not in grid:
+                        self.rect(x + (i + di) * scale, y + (j + dj) * scale, scale, scale, outline)
+        for (i, j), ch in grid.items():
+            col = colors[ch]
+            if shade:
+                if grid.get((i, j - 1)) != ch:
+                    col = self.light(col)
+                elif grid.get((i, j + 1)) != ch:
+                    col = self.dark(col)
+                elif grid.get((i - 1, j)) != ch:
+                    col = self.light(col)
+                elif grid.get((i + 1, j)) != ch:
+                    col = self.dark(col)
+            self.rect(x + i * scale, y + j * scale, scale, scale, col)
         return max(map(len, rows)) * scale, len(rows) * scale
 
     def icon(self, x: int, y: int, name: str, color, *, scale: int = 1) -> tuple[int, int]:
@@ -167,6 +192,20 @@ class Art:
                     if n not in faces:
                         self.px(n[0], n[1], outline)
         return geo
+
+    def iso_tile(self, ox: int, oy: int, u: float, v: float, w: float = 1, d: float = 1, color="line", *,
+                 z: float = 0, unit: int = 1, pattern=None, outline=None) -> list[tuple[int, int]]:
+        """A flat quad on an iso grid whose origin is (ox, oy): from (u, v) for w by d cells of `unit`
+        iso units, raised z px. Returns its four corners."""
+        pts = [iso_xy(ox, oy, a * unit, b * unit, z) for a, b in ((u, v), (u + w, v), (u + w, v + d), (u, v + d))]
+        self.polygon(pts, fill=color, outline=outline, pattern=pattern)
+        return pts
+
+    def iso_block(self, ox: int, oy: int, u: float, v: float, w: int, d: int, h: int, *, z: float = 0,
+                  unit: int = 1, top, left, right, **kw) -> Iso:
+        """iso_box placed on an iso grid: its footprint starts at cell (u, v) and its base sits z px up."""
+        x, y = iso_xy(ox, oy, u * unit, v * unit, z + h)
+        return self.iso_box(x, y, w * unit, d * unit, h, top=top, left=left, right=right, **kw)
 
     def circle(self, cx: float, cy: float, r: float, color, *, outline=None) -> Rect:
         """Filled disc of every pixel whose centre lies within r of (cx, cy); `outline` rings its

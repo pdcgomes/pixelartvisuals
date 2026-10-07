@@ -106,6 +106,12 @@ These are what make the output match the look; follow them unless the user asks 
 - Rankings `hbars`, parts of a whole `waffle` or `stacked` + `legend`, per-core loads `seg_column`,
   trends `grid` + `spark(fill=...)`, levels `meter` / `gauge`, stat lists `kv`, deltas `tag`,
   processors `chip`, bevelled swatches `tile`.
+- Game screens and scenes: `iso_tile`/`iso_block` maps, `darkness` + `flicker` torchlight, `glow`,
+  `particles` (rain, snow, embers, smoke, sparks, dust, motes, wisps; `burst=True` for a hit),
+  `reflect`/`shimmer` water, `heat` haze, spells with `projectile`, `glyph` and `orbit`, figures
+  shaded with `form` or `sprite(shade=True)`, first-person views with `Raycaster`, logos and menus in
+  `chunky` extruded lettering, the `melt` screen wipe, and HUD parts `bevel`, `orb` and `cooldown`
+  (see Illustrations below).
 - Architecture and flows: `node` boxes in rows by layer, `connect` elbows routed through the gutters
   (`via`), a `bus` for the dependency everything shares, and `dashes` for a process or sandbox
   boundary. A system too big for one image becomes a series: one idea per image, with the same
@@ -148,7 +154,10 @@ animate(draw, "chart.gif", preset="standard", seconds=2.4, fps=20, hold=3)
   change about once a second (`tick = int(t * seconds)`); only decoration (LEDs, dust, scrolling
   charts) moves every frame.
 - Move whole pixels and swap colours. There are no alpha fades, so make things grow, pop, scroll,
-  blink or type in.
+  blink or type in, or fade with `dissolve` and `tint`.
+- Effects are frame-pure: `particles`, `flicker`, `shake`, `orbit`, `reflect`, `shimmer`, `heat`,
+  `glyph` and `projectile` compute every frame from `t` and a seed, so whole `cycles` make them loop
+  without a seam.
 - The extension picks the format. `.gif` plays everywhere. `.webp` (lossless) is several times
   smaller. `.mp4` suits social video, and loops on a page with `<video autoplay loop muted>`.
   `.png` writes APNG.
@@ -167,7 +176,20 @@ future graphic. For a second look, copy the file and pass `Canvas(theme="path.to
 
 - Devices and objects: `iso_box` (faces take a colour or a list for a dithered gradient; textures
   `grille`, `slots`, `mesh`) plus `iso_floor` and `sparkles`. See `dashboard.py` and `cover.py`.
-- Icons: `c.icon(x, y, name, colour)`. Small sprites: `c.sprite(x, y, ascii_art, {"a": "green"})`.
+- Icons: `c.icon(x, y, name, colour)`. Small sprites: `c.sprite(x, y, ascii_art, {"a": "green"})`;
+  `outline="shadow"` rings a character so it reads on a busy scene.
+- Scenes and game screens: lay rooms and maps out on an iso grid with `iso_xy`, `iso_tile` and
+  `iso_block`; draw a part on `c.sub(w, h)` and `c.paste` it (clipped, colour-keyed, sheared onto a
+  wall, or stretched to wide pixels). Light it with `darkness` (torch pools), `glow`, `vignette` and
+  `flicker`; animate weather, fire and smoke with `particles`; water with `reflect` and `shimmer`;
+  flashes and fades with `tint` and `dissolve`; spells with `projectile`, `glyph` and `orbit`; and
+  build HUDs from `bevel`, `orb` and `cooldown`. For a large creature, paint each part flat in a
+  marker colour on a keyed `sub`, shade it with `form`, and `paste(..., key=, outline=)` the result.
+  For a first-person level, build a `Raycaster` from a grid map and small procedural textures, pass
+  enemies and pickups as billboard sprites, and draw the weapon and status bar over its view; title
+  screens and menus use `chunky`, and `melt` wipes from one screen to the next.
+  `examples/dungeon.py`, `mmo.py`, `city.py`, `pirate.py`, `lounge.py` and `doom.py` in the repo use
+  them all.
 - Anything complex (people, scenes, logos): generate or find an image, then lock it to the palette
   with `python3 scripts/pixelate.py in.png out.png --width 80 --key --dither 0.4` and place it with
   `c.image("out.png", x, y, colors="keep")`. `c.image(path, x, y, w=80)` does the same in one step.
