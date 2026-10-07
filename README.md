@@ -30,6 +30,14 @@ The repo holds two things:
 | `waffle.py`: parts of a whole | `cover.py`: a post cover and social card |
 | ![Diagram](skill/examples/diagram.png) | ![Specimen](skill/examples/specimen.png) |
 | `diagram.py`: nodes, a bus and connectors | `specimen.py`: every glyph, colour, icon and part |
+## Projects
+
+[**Redlamp's architecture, in six pictures**](projects/redlamp-architecture/): an open-source raw
+photo editor's layers, modules, pipeline, frame timing, storage and on-device models, drawn with
+the kit's diagram parts.
+
+[![Redlamp at a glance](projects/redlamp-architecture/01_overview.png)](projects/redlamp-architecture/)
+
 ## Quick start
 
 Requires Python 3.11 or later with Pillow and numpy. ffmpeg is needed only for MP4.

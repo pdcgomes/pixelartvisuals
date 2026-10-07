@@ -218,12 +218,15 @@ class Canvas(Widgets, Art):
     # layout ------------------------------------------------------------------
 
     def mark(self, x: int, y: int, mark="stripes") -> tuple[int, int]:
-        """The brand mark: stripes of the series colours, or a small PNG drawn at 1x."""
+        """The brand mark: stripes of the series colours, a (sprite rows, colour map) pair, or a
+        small PNG drawn at 1x."""
         if mark == "stripes":
             colors = self.theme.series[:6]
             for i, c in enumerate(colors):
                 self.hline(x, y + i, 9, c)
             return 9, len(colors)
+        if isinstance(mark, tuple):
+            return self.sprite(x, y, mark[0], mark[1])
         return self.image(mark, x, y, colors="keep")
 
     def header(self, title, sub=None, right=None, *, font: str = "small", color="white", mark=None,
@@ -235,7 +238,8 @@ class Canvas(Widgets, Art):
         x = pad
         mark = self.theme.brand.get("mark", "stripes") if mark is None else mark
         if mark and mark != "none":
-            mw, mh = self.mark(x, (h - 1 - 6) // 2, mark)
+            rows = len(mark[0]) if isinstance(mark, tuple) else 6
+            mw, mh = self.mark(x, (h - 1 - rows) // 2, mark)
             x += mw + 4
         x += self.text(x, (h - 1 - f.cap) // 2, title, color, font=font)
         sy = (h - 1 - 5) // 2

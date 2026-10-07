@@ -397,13 +397,24 @@ class Widgets:
             direction = ("right" if x1 > x0 else "left") if y0 == y1 else ("down" if y1 > y0 else "up")
             self._head(x1, y1, direction, color)
 
-    def connect(self, a, b, color, *, via=None, ax=None, bx=None, label=None, label_color="dim",
+    def connect(self, a, b, color, *, via=None, ax=None, bx=None, side=None, label=None, label_color="dim",
                 dotted: bool = False, head: bool = True) -> list[tuple[int, int]]:
         """Orthogonal elbow from Rect a's facing edge to Rect b's, ending in a head on b's edge.
-        Vertical when one is above the other, otherwise horizontal. `ax`/`bx` move the anchor along
-        each edge (an x for vertical runs, a y for horizontal ones), `via` sets where the middle
-        segment runs, and `label` sits beside it. Returns the corner points."""
-        if b.y >= a.y2 or a.y >= b.y2:
+        Vertical when one is above the other, otherwise horizontal. side="top" or "bottom" leaves
+        and enters both boxes through that edge instead, a U-shaped run for boxes in the same row.
+        `ax`/`bx` move the anchor along each edge (an x for vertical runs, a y for horizontal ones),
+        `via` sets where the middle segment runs, and `label` sits beside it. Returns the corner
+        points."""
+        if side in ("top", "bottom"):
+            sx, ex = (a.cx if ax is None else ax), (b.cx if bx is None else bx)
+            if side == "bottom":
+                sy, ey = a.y2, b.y2
+                mid = max(a.y2, b.y2) + 5 if via is None else via
+            else:
+                sy, ey = a.y - 1, b.y - 1
+                mid = min(a.y, b.y) - 6 if via is None else via
+            pts = [(sx, sy), (sx, mid), (ex, mid), (ex, ey)]
+        elif b.y >= a.y2 or a.y >= b.y2:
             down = b.y >= a.y2
             sx, ex = (a.cx if ax is None else ax), (b.cx if bx is None else bx)
             sy, ey = (a.y2, b.y - 1) if down else (a.y - 1, b.y2)
