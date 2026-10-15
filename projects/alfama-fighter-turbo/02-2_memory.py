@@ -6,9 +6,11 @@ log winning over the art bible; the lane works, then writes its as-built note ba
 
 Numbers and sources (alfamafighterturbo at 74e2f64):
 - The documents and their jobs: docs/studio/studio-model.md, "The documents are the studio's memory".
-- 11 rows "Asked and answered" and 250 "Recommendations accepted": docs/studio/decisions.md (count of
-  table rows, headers excluded). Shown as "250 more calls", since 133 of the 250 are the producer's or
-  another role agent's own calls rather than recommendations Pedro accepted.
+- 261 entries: 11 rows "Asked and answered" and 250 "Recommendations accepted" in docs/studio/decisions.md
+  (count of table rows, headers excluded). 133 of the 250 name the producer (68) or another role agent
+  (65); shown as "133 from agents", since about seven of those are designs put to Pedro for approval
+  rather than calls the agents made. The rest are Pedro's (94, plus the 11) or the 23 bible answers he
+  took in one go.
 - 20 feature designs and plans besides the design document and the studio plan: docs/plans/ (22 files).
 - The disagreement: the art bible's size classes put A Padeira in "large", 106 to 112 px (art bible,
   section 2.1's table); the decisions log, 7 October: "A Padeira keeps her size: 95–100 px upright"; the
@@ -65,8 +67,8 @@ def draw(c, t):
                 y += 8
             y += 1
         if key == "log":
-            c.spans(docs.x + 12, y, [("11", "white"), (" ASKED AND ANSWERED · ", "dim"), ("250", "white"),
-                                     (" MORE CALLS", "dim")])
+            c.spans(docs.x + 12, y, [("261", "white"), (" ENTRIES · ", "dim"), ("133", "white"),
+                                     (" FROM AGENTS", "dim")])
             y += 9
 
     # The lane, on the right, joined to the documents by a line down the gutter.

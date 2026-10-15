@@ -112,7 +112,7 @@ def draw(c, t):
     note = c.panel(0, note_y, c.w, bottom - note_y - 2, "ONE AGENT, SEVERAL ROLES", color="white",
                    sub="A LANE OFTEN NEEDED TWO OR THREE")
     c.text(note.x, note.y, "17", c.light(ART), font="large", shadow="line")
-    c.paragraph(note.x + 16, note.y, "OF THE 31 AGENTS ON THE BOARD AT 18:30 ON 8 OCTOBER PLAYED MORE THAN ONE ROLE: "
+    c.paragraph(note.x + 16, note.y, "OF THE 31 AGENTS ON THE BOARD ON 8 OCTOBER PLAYED MORE THAN ONE ROLE: "
                 "CHARACTER ARTIST, ANIMATOR AND ENGINE PROGRAMMER FOR ONE FIGHTER END TO END", 212, "text")
     c.paragraph(note.x + 240, note.y, "AGENTS WERE RESUMED FOR MORE WORK IN THEIR OWN AREA: THE ARTIST WHO DREW "
                 "CAMÕES WENT ON TO DRAW ADAMASTOR AND O CALCETEIRO", note.w - 240, "text")
